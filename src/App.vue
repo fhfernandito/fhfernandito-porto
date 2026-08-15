@@ -1,8 +1,8 @@
 <template>
   <v-app>
     <!-- <ParticleBackground /> -->
-    <!-- <CircleCursor /> -->
-    <OilFluidCursor v-if="mdAndUp" />
+    <!-- <OilFluidCursor v-if="mdAndUp" /> -->
+    <CircleCursor v-if="mdAndUp" />
     <router-view />
     <!-- <RouteTransition /> -->
   </v-app>

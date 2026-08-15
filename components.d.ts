@@ -15,6 +15,7 @@ declare module 'vue' {
     CircleCursor: typeof import('./src/components/feature/CircleCursor.vue')['default']
     CursorCanvas: typeof import('./src/components/feature/CursorCanvas.vue')['default']
     FluidCursor: typeof import('./src/components/feature/FluidCursor.vue')['default']
+    GuitarStrings: typeof import('./src/components/feature/GuitarStrings.vue')['default']
     LoadingScreen: typeof import('./src/components/LoadingScreen.vue')['default']
     MagicBall: typeof import('./src/components/MagicBall.vue')['default']
     Navigation: typeof import('./src/components/Navigation.vue')['default']
@@ -24,5 +25,6 @@ declare module 'vue' {
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     RouteTransition: typeof import('./src/components/RouteTransition.vue')['default']
+    WorkGallery: typeof import('./src/components/feature/WorkGallery.vue')['default']
   }
 }

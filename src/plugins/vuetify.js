@@ -25,13 +25,13 @@ export default createVuetify({
       light: {
         dark: false,
         colors: {
-          primary: '#cc10bf',
+          primary: '#fff06c',
         },
       },
       dark: {
         dark: true,
         colors: {
-          primary: '#cc10bf',
+          primary: '#fff06c',
         },
       },
     },

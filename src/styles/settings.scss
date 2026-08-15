@@ -7,6 +7,6 @@
 // https://vuetifyjs.com/features/sass-variables/`
 @use 'vuetify/settings' with (
   $color-pack: true,
-  $body-font-family: ('Neue Haas Grotesk Display Pro', sans-serif),
-  $heading-font-family: ('Neue Haas Grotesk Display Pro', sans-serif)
+  $body-font-family: ('Space Grotesk', sans-serif),
+  $heading-font-family: ('Space Grotesk', sans-serif)
 );

@@ -5,9 +5,9 @@
       <router-view />
     </v-main>
 
-    <PreFooter />    
+    <!-- <PreFooter />     -->
   </div>
-  <LoadingScreen />
+  <!-- <LoadingScreen /> -->
 </template>
 
 <script setup>
@@ -21,7 +21,10 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 gsap.registerPlugin(ScrollTrigger);
 
-const lenis = new Lenis({ autoRaf: false });
+// allowNestedScroll: elemen ber-overflow di dalam halaman digulir lebih dulu,
+// dan Lenis baru mengambil alih halaman setelah isinya mentok. Defaultnya false,
+// yang membuat semua wheel event langsung dibajak untuk menggulir halaman.
+const lenis = new Lenis({ autoRaf: false, allowNestedScroll: true });
 window.lenis = lenis;
 
 lenis.on('scroll', ScrollTrigger.update);
