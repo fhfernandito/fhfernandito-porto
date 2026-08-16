@@ -70,7 +70,7 @@
                 >
                   {{ project.title }}
                 </p>
-                <p class="work-mono text-grey">{{ project.category }}</p>
+                <p class="work-mono text-grey mt-1">{{ project.category }}</p>
               </div>
 
               <!-- saat hover, seluruh gambar tertutup panel detail -->
@@ -85,14 +85,14 @@
                   >
                     <div class="d-flex align-start justify-space-between ga-4">
                       <div>
-                        <p class="work-mono text-primary mb-2">/{{ pad(index) }}</p>
+                        <p class="work-mono text-primary mb-1">{{ pad(index) }}</p>
                         <p
                           class="text-h6 text-sm-h4 text-lg-h3 font-weight-medium text-primary"
                           style="line-height: normal;"
                         >
                           {{ project.title }}
                         </p>
-                        <p class="work-mono text-grey">{{ project.category }}</p>
+                        <p class="work-mono text-grey mt-1">{{ project.category }}</p>
                       </div>
                       <v-btn
                         icon="mdi-arrow-top-right"
@@ -152,8 +152,9 @@
             <v-btn
               v-bind="props"
               icon="mdi-chevron-left"
-              :variant="isHovering ? 'flat' : 'outlined'"
+              :variant="isHovering ? 'outlined' : 'text'"
               color="white"            
+              border
               :size="$vuetify.display.xs ? 'small' : undefined"
               @click="step(-1)"
             ></v-btn>
@@ -162,8 +163,9 @@
             <v-btn
               v-bind="props"
               icon="mdi-chevron-right"
-              :variant="isHovering ? 'flat' : 'outlined'"
-              color="white"            
+              :variant="isHovering ? 'outlined' : 'text'"
+              color="white"
+              border
               :size="$vuetify.display.xs ? 'small' : undefined"
               @click="step(1)"
             ></v-btn>
@@ -272,96 +274,114 @@ import { ref, watch, nextTick, onMounted, onUnmounted } from 'vue';
 import ScrollTrigger from 'gsap/ScrollTrigger';
 
 const projects = [
-  {    
+  {
+    title: "Fleety",
+    category: "SAAS / FLEET TRACKING / GEOSPATIAL",
+    tech: `Nuxt.js${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Pinia${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Laravel${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Python (FastAPI)${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}PostgreSQL${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}PostGIS${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}MapLibre GL${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Vector Tiles${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}NOAA Data`,
+    link: null,
+    image: "/projects/fleety.png",
+    introduction: "An AIS-based tracking platform that follows commercial fleets across open sea. Live vessel positions and historical tracks render on an interactive 3D globe and on vector-tile sea charts, so operators can watch a shipment move from port to port. The hard part is routing. A straight line between two ports runs aground, so the water itself is modelled as a graph in PostGIS and a dedicated Python service runs Dijkstra across it, weighing bathymetry data so the shortest path returned is one the vessel can actually sail.",
+  },
+  {
     title: "Mejaku",
     category: "SAAS / POINT OF SALE",
-    tech: `Vue.js${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Laravel${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}MySQL${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Midtrans${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}AWS (S3)${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Resend${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}AI (Gemini)${"\u00A0"}${"\u00A0"}`,
+    tech: `Vue.js${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Vuetify${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Pinia${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Laravel${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}MySQL${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}PWA${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Midtrans${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}AWS (S3)${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Resend${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}AI (Gemini)${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}QR Code${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Chart.js${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}ExcelJS${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}WebBluetooth / WebUSB (Receipt Printer)`,
     link: [
       { label: "Website", url: "https://mejaku.id" },
-      { label: "Instagram", url: "https://www.instagram.com/mejakuid/" }
+      { label: "Instagram", url: "https://www.instagram.com/mejakuid/" },
     ],
     image: "/projects/mejaku.png",
-    introduction: "Mejaku is an AI-powered Software-as-a-Service (SaaS) Point of Sale platform designed to streamline F&B operations. It features an intelligent cashier module tailored for dine-in services and an integrated table management system that empowers customers to place direct orders via QR codes. Enhanced by AI capabilities (powered by Gemini), the platform goes beyond basic transactions to offer centralized multi-outlet management, comprehensive product and inventory control, visual analytics for business performance tracking, role-based staff authorization, and seamless hardware integration for thermal receipt printers and payment gateways.",
+    introduction: "An AI-assisted point-of-sale platform for F&B businesses. Diners order straight from their table by scanning a QR code while staff run the floor through a cashier and table-management module built for dine-in service. Behind it sits multi-outlet management, product and inventory control, role-based staff access, sales analytics, and spreadsheet exports. Receipts print over Web Bluetooth and WebUSB, so a thermal printer works directly from the browser with no driver to install.",
   },
-  {    
+  {
     title: "Hello Crew",
-    category: "PLATFORM",
-    tech: `Nuxt.js${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Laravel${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}MySQL${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Webhook${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}AWS (S3)${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Google Auth`,
+    category: "PLATFORM / IDENTITY PROVIDER / OAUTH",
+    tech: `Nuxt.js${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Pinia${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Laravel${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Laravel Passport${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}MySQL${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Webhook${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}AWS (S3)${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Resend${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Chart.js${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Google Auth`,
     link: [
       { label: "Website", url: "https://hellocrew.id" },
       { label: "TikTok 1", url: "https://vt.tiktok.com/ZS9hDrjFY/" },
-      { label: "TikTok 2", url: "https://vt.tiktok.com/ZS9YxbDPL/" }
+      { label: "TikTok 2", url: "https://vt.tiktok.com/ZS9YxbDPL/" },
     ],
     image: "/projects/hellocrew.png",
-    introduction: "\"The Global Seafarer Hub\" - A centralized platform functioning as the primary database and dedicated career portal for seafarers. This is the central hub where all seafarers register accounts, complete profiles, and upload documents or certificates. Hello Crew is responsible for aggregating and displaying the complete list of job vacancies from various shipping companies integrated within the ecosystem.",
+    introduction: "The global seafarer hub — a career portal, a central crew database, and the identity layer every other product in the ecosystem is built on. More than 1,000 seafarers have registered so far, each building a profile and uploading the documents and certificates their career depends on; from there they see every vacancy posted by shipping companies across the network. The account itself is the product: Hello Crew runs as an OAuth 2.0 provider on Laravel Passport, so one seafarer login becomes \"Sign in with Hello Crew\" across the workspace of every shipping company on the platform — one identity, many employers, no profile rebuilt from scratch each time someone changes ship. Automated email keeps applicants informed at each stage, and analytics dashboards show recruiters where their pipeline actually stands.",
   },
-  {    
+  {
     title: "Hello Crew Enterprise",
     category: "SAAS / ERP",
-    tech: `Vue.js${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Laravel${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}MySQL${"\u00A0"}${"\u00A0"}${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Webhook${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}AWS (S3)${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}AI (Gemini)${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Google Auth`,
+    tech: `Vue.js${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Vuetify${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Vue I18n${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Laravel${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}MySQL${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}OAuth 2.0 (Hello Crew SSO)${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Webhook${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}AWS (S3)${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}AI (Gemini)${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Google Auth${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Resend${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Leaflet${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Quill${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}PDFMake${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}PDF Parser${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}ExcelJS`,
     link: [
-      { label: "Website", url: "https://hellocrew-sosm.sevenoceans.co.id" }
+      { label: "Website", url: "https://hellocrew-sosm.sevenoceans.co.id" },
     ],
     image: "/projects/hellocrewenterprise.png",
-    introduction: "\"The Crewing Agency Operation System\" - An AI-powered internal management platform tailored for shipping companies. While initial account registration occurs on the main Hello Crew hub, all core operational workflows—from job applications, sign-on/sign-off processes, and work record tracking, to performance evaluations—are fully managed within Hello Crew Enterprise. Enhanced by AI capabilities (powered by Gemini), the system streamlines complex crew management tasks and seamlessly transmits experience data and evaluations back to the main hub, ensuring seafarer reputations remain continuously and accurately updated.",
+    introduction: "The operating system for crewing agencies, running as an OAuth client of the Hello Crew hub. Crew sign in with the Hello Crew account they already have — no new credentials for each shipping company they work for — and every workflow after that lives here: job applications, sign-on and sign-off, sea-service records, and performance evaluations. Gemini reads crew data straight out of uploaded PDF documents so nobody retypes a certificate by hand, the interface serves crews of mixed nationalities in their own language, and operational reports export to PDF and Excel. Completed contracts and evaluations sync back to the hub, so a seafarer's record follows them from one company to the next instead of dying inside a single employer's database.",
   },
   {
     title: "Plan Maintenance System",
     category: "SAAS / ERP / WEB APP",
-    tech: `Vue.js${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Laravel${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Python${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}MySQL${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Leaflet${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}DeepL (Translation)${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}PWA${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Electron`,
+    tech: `Vue.js${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Vuetify${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Laravel${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Express.js${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Python${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}MySQL${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}PWA${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}MapLibre GL${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}PMTiles${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Leaflet${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}PixiJS${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Turf.js${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}AWS SDK${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}DeepL (Translation)`,
     link: [
-      { label: "Website", url: "https://pms.sevenoceans.co.id" }
+      { label: "Website", url: "https://pms.sevenoceans.co.id" },
     ],
-    image: "/projects/pms.png",    
-    introduction: "Plan Maintenance System (PMS) is an all-in-one platform designed to streamline maritime operations end to end—centralizing personnel onboard management, ship certificate tracking, real-time dashboards, and GPS-based visibility. It keeps crew duties, monitors every vessel certificate from issue to expiry with clear highlights for renewals, and provides live insights into ship condition, engine performance, and consumables through intuitive reporting. With GPS integration—augmented by ocean data such as weather and wave information—the PMS supports safer navigation, helping owners and operators boost compliance, efficiency, and decision-making across their fleets.",
+    image: "/projects/pms.png",
+    introduction: "A planned maintenance system running in production across a 20-vessel fleet, handling operations from one place: crew onboard, ship certificates, engine performance, and consumables. Every certificate is tracked from issue to expiry and flagged before renewal falls due — the difference between a compliant vessel and a detained one. Positions are drawn on offline-capable vector maps built from PMTiles so the map still works at sea, a dedicated service ingests ocean data such as weather and wave conditions, and any screen translates on the fly for multinational crews.",
   },
   {
     title: "SeaLinks",
     category: "MOBILE APP / LOGISTICS",
-    tech: `Vue.js${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Laravel${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}MySQL${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Capacitor${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Firebase (Cloud Messaging)${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Pusher (Realtime Chat)`,
+    tech: `Vue.js${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Vuetify${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Laravel${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}MySQL${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Capacitor${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Biometric Auth${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Secure Storage${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Firebase (Cloud Messaging)${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Pusher${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Laravel Echo${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}PDFMake`,
     link: null,
-    image: "/projects/sealinks.webp",    
-    introduction: "A mobile app (Android/IOS) for maritime industry. This app is offer and booking system between vessel owners and cargo owners. Features include vessel listing, booking management, chatting, and notifications. This app is designed to streamline the booking process and improve communication between vessel owners and cargo owners.",
+    image: "/projects/sealinks.webp",
+    introduction: "A cross-platform mobile app for Android and iOS that connects vessel owners with cargo owners. Owners list available vessels, cargo owners send offers, and both sides negotiate through realtime chat backed by Pusher and Laravel Echo, with push notifications delivered over Firebase Cloud Messaging. Sign-in runs on fingerprint or Face ID with credentials held in encrypted device storage, so crews get back into the app in seconds without weakening the account behind it.",
+  },  
+  {
+    title: "SOERP",
+    category: "ERP / INTERNAL SYSTEM",
+    tech: `Vue.js${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}PrimeVue${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Tailwind CSS${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Pinia${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Laravel${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}MySQL${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Quill${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}ExcelJS${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}PDFMake`,
+    link: [
+      { label: "Website", url: "https://soerp.sevenoceans.co.id" },
+    ],
+    image: "/projects/soerp.png",
+    introduction: "An internal ERP that runs a company's day-to-day back office in a single system: employee records, an issue ticketing workflow, work-in-progress tracking, purchasing, and finance reporting. Every module exports to Excel and PDF, so each department keeps working in the format it already uses instead of bending its process around the software.",
   },
   {
     title: "PT Seven Oceans Technology Services",
     category: "COMPANY PROFILE / WEBGL",
-    tech: `WebGL${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}GSAP${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Vue.js${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Vuetify${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Laravel`,
+    tech: `Three.js (WebGL)${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Postprocessing${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Simplex Noise${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}PixiJS${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}GSAP${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Lenis${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Vue.js${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Vuetify${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Laravel`,
     link: [
-      { label: "Website", url: "https://sots.sevenoceans.co.id" }
+      { label: "Website", url: "https://sots.sevenoceans.co.id" },
     ],
-    image: "/projects/sots.png",    
-    introduction: "PT Seven Oceans Technology Services is a technology company focused on developing reliable and innovative digital solutions. We build and deliver custom-made software tailored to client needs or as ready-to-use products. With experience across multiple sectors from maritime and industrial to digital enterprise. We provide efficient, secure, and results oriented technology integration.",
-  },  
+    image: "/projects/sots.png",
+    introduction: "A company profile built as a real-time WebGL scene rather than a page. Three.js renders the visuals through custom postprocessing passes and simplex-noise driven motion, GSAP choreographs the storytelling, and Lenis smooths the scroll so the whole thing reads as one continuous shot. The result presents a maritime technology company as something you move through instead of something you read.",
+  },
   {
     title: "Seven Oceans Group",
     category: "COMPANY PROFILE",
-    tech: `Vue.js${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Vuetify${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Laravel`,
+    tech: `Vue.js${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Vuetify${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Pinia${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}GSAP${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Lenis${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Swiper${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Laravel`,
     link: [
-      { label: "Website", url: "https://sevenoceans.co.id" }
+      { label: "Website", url: "https://sevenoceans.co.id" },
     ],
-    image: "/projects/sogcompro.png",    
-    introduction: "Seven Oceans Group is a leading maritime company that provides comprehensive solutions for the maritime industry, including ship management, crew management, and vessel maintenance. The company is committed to providing innovative and efficient solutions to meet the needs of its clients and contribute to the growth of the maritime industry.",
+    image: "/projects/sogcompro.png",
+    introduction: "A company profile for a maritime group working across ship management, crew management, and vessel maintenance. Each subsidiary and service line is presented through scroll-driven sequences and image galleries, with every piece of content served from a Laravel backend so the marketing team can keep the site current without touching code.",
   },
-  {    
+  {
     title: "Roomar",
     category: "ECOMMERCE / WORDPRESS",
     tech: `Wordpress`,
     link: [
-      { label: "Website", url: "https://roomarofficial.com" }
+      { label: "Website", url: "https://roomarofficial.com" },
     ],
-    image: "/projects/roomar.png",    
-    introduction: "An e-commerce website for Roomar, a parfume and diffuser brand, to showcase and sell their products online.",
+    image: "/projects/roomar.png",
+    introduction: "An online store for Roomar, a perfume and diffuser brand moving its catalogue from social media to a storefront it owns. Built on WordPress so the owner can add products, adjust pricing, and run promotions without a developer in the loop — the right call for a small catalogue that changes far more often than it grows.",
   },
-  {    
+  {
     title: "Grha Pengharapan",
     category: "SAAS / ERP / ORGANIZATION",
-    tech: `Vue.js${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Laravel${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}MySQL`,
+    tech: `Vue.js${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Vuetify${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Pinia${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Laravel${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Laravel Passport${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}MySQL${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Twilio${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}Chart.js${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}ExcelJS${"\u00A0"}${"\u00A0"}•${"\u00A0"}${"\u00A0"}jsPDF`,
     link: [
-      { label: "Website", url: "https://grhapengharapan.org" }
+      { label: "Website", url: "https://grhapengharapan.org" },
     ],
-    image: "/projects/grhapengharapan.png",    
-    introduction: "A property management website for Grha Pengharapan Church to manage their organization data, events, and resources efficiently. Features include event scheduling, resource allocation, and member management.",
+    image: "/projects/grhapengharapan.png",
+    introduction: "A management system for a church in Pati, Central Java, covering everything that keeps a congregation running. It schedules worship services and assigns the teams behind them — worship leaders, singers, musicians — publishes weekly bulletins and daily devotionals, opens event registration to members, and keeps the treasury accountable with income and expense records. Automated messaging reaches members the moment a schedule changes, and reports export to Excel or PDF, replacing the spreadsheets and group chats the office used to run on.",
   },
 ];
 

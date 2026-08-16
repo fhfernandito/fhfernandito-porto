@@ -58,8 +58,11 @@
     </div>
   </v-container>
 
-  <!-- naik 100vh menutupi quote yang masih terpaku di viewport -->
-  <div class="bg-black rounded-t-xl" style="position: relative; z-index: 2; margin-top: -100vh;">
+  <!-- Naik 100vh menutupi quote yang masih terpaku di viewport.
+       min-height 100vh wajib: margin negatif menaikkan section ini 100vh, jadi
+       kalau isinya lebih pendek dari itu ujungnya berhenti DI ATAS ujung quote,
+       dan sisa container quote yang abu muncul sebagai ruang kosong di bawah. -->
+  <div class="bg-black rounded-t-xl" style="position: relative; z-index: 2; margin-top: -100vh; min-height: 102vh;">
     <v-container
       fluid
       :class="$vuetify.display.smAndDown ? 'px-4' : 'px-16'"

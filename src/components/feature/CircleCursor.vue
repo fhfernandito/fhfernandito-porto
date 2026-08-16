@@ -156,8 +156,12 @@ onUnmounted(() => {
 </style>
 
 <style>
-/* kursor bawaan disembunyikan agar tidak tampil ganda dengan lingkarannya */
-@media (hover: hover) {
+/* Kursor bawaan disembunyikan agar tidak tampil ganda dengan lingkarannya.
+   Blok non-scoped ini ikut terpasang begitu komponennya di-IMPORT, bukan saat
+   dirender — padahal App.vue merendernya dengan v-if="mdAndUp". Tanpa batas
+   min-width yang sama (960px = breakpoint md Vuetify), di layar lebih sempit
+   kursor bawaan ikut hilang padahal penggantinya tidak pernah muncul. */
+@media (hover: hover) and (min-width: 960px) {
   body {
     cursor: none;
   }

@@ -22,7 +22,7 @@
         </v-hover>
         <div class="d-flex flex-column">
           <p class="text-body-1 text-sm-h6 font-weight-medium">F. Hanindya Fernandito</p>
-          <p class="text-body-1 opacity-50">Software Engineer</p>
+          <p class="text-body-1 opacity-50">Full-Stack Software Engineer</p>
         </div> 
       </div>     
     </template>       
@@ -194,71 +194,19 @@
 
 <script setup>
 import { DotLottieVue } from "@lottiefiles/dotlottie-vue";
-import { ref, onMounted, onBeforeUnmount } from "vue";
+import { ref } from "vue";
 import gsap from "gsap";
+import { useMusicPlayer } from "@/composables/useMusicPlayer";
 
 const menu = ref(false);
-const isPlayingMusic = ref(false);
-let audioCtx;
-let audioEl;
-let track;
-let gainNode;
-let stopTimer;
 
-const rampGain = (target, durationSec) => {
-  if (!gainNode || !audioCtx) return;
-  const t0 = audioCtx.currentTime;
-  const start = gainNode.gain.value;
-  gainNode.gain.cancelScheduledValues(t0);
-  gainNode.gain.setValueAtTime(start, t0);
-  gainNode.gain.linearRampToValueAtTime(target, t0 + durationSec);
-};
-
-const playMusic = async () => {
-  if (!audioCtx) return;
-  // batalkan jeda yang masih menunggu, supaya klik cepat tidak mematikan lagu baru
-  clearTimeout(stopTimer);
-  await audioCtx.resume();
-  audioEl.loop = true;
-  await audioEl.play();
-  rampGain(1, 2); // fade in 2 detik ke volume penuh
-  isPlayingMusic.value = true;
-};
-
-const stopMusic = () => {
-  if (!audioCtx) return;
-  rampGain(0, 1.5); // fade out 1.5 detik
-  stopTimer = setTimeout(() => {
-    // hanya dijeda, posisi lagu dibiarkan agar bisa dilanjutkan
-    audioEl.pause();
-    isPlayingMusic.value = false;
-  }, 1500);
-};
-
-const toggleMusic = () => {
-  if (!isPlayingMusic.value) playMusic();
-  else stopMusic();
-};
+// playlist, fade, dan analyser-nya dikelola di composable karena GuitarStrings
+// juga membacanya untuk menggetarkan senar mengikuti lagu
+const { isPlaying: isPlayingMusic, toggle: toggleMusic } = useMusicPlayer();
 
 const scrollToBottom = () => {
   window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
 };
-
-onMounted(() => {
-  audioCtx = new AudioContext();
-  // spasi pada nama berkas harus di-encode agar URL-nya sah
-  audioEl = new Audio("/We%20Are.mp3");
-  track = audioCtx.createMediaElementSource(audioEl);
-  gainNode = audioCtx.createGain();
-  gainNode.gain.value = 0;
-  track.connect(gainNode).connect(audioCtx.destination);
-});
-
-onBeforeUnmount(() => {
-  clearTimeout(stopTimer);
-  audioEl?.pause();
-  audioCtx?.close();
-});
 </script>
 
 <style scoped>
