@@ -6,9 +6,15 @@
 import { ref, computed, watchEffect, onMounted, onUnmounted } from "vue";
 import { useTheme } from "vuetify";
 import { useMusicPlayer } from "@/composables/useMusicPlayer";
+import { useAmbientMic } from "@/composables/useAmbientMic";
 
 const theme = useTheme();
-const { analyser, isPlaying } = useMusicPlayer();
+const { analyser: musicAnalyser, isPlaying } = useMusicPlayer();
+const {
+  analyser: micAnalyser,
+  isListening,
+  autoStart: startListening,
+} = useAmbientMic();
 
 const props = withDefaults(
   defineProps<{
@@ -40,10 +46,12 @@ interface GuitarString {
   points: StringPoint[];
   active: number; // 0..1, seberapa "menyala" senar ini
 
-  // --- bagian yang digerakkan musik ---
+  // --- bagian yang digerakkan suara ---
   binLo: number; // bin FFT pertama milik senar ini
   binHi: number; // batas atas (eksklusif)
-  peak: number; // puncak yang pernah terukur, untuk kalibrasi otomatis
+  musicPeak: number; // puncak dari lagu, untuk kalibrasi otomatis
+  micPeak: number; // puncak dari mikrofon; dipisah karena rentangnya beda jauh
+  micFloor: number; // lantai derau ruangan, diukur sendiri
   env: number; // 0..1, amplitudo getaran saat ini
   phase: number; // sudut ayunan, terus bertambah tiap frame
   wobble: number; // laju ayunan (siklus per detik)
@@ -82,6 +90,16 @@ const audioConfig = {
   // konstanta waktu peluruhan puncak (detik). Cukup lambat untuk jadi kalibrasi,
   // bukan kompresor yang memompa-mompa
   peakTau: 2.5,
+  // --- jalur mikrofon ---
+  // Ambang tetap tidak dipakai di sini: tiap ruangan punya lantai derau sendiri,
+  // jadi angka yang pas di satu tempat akan salah di tempat lain. Lantainya
+  // diukur langsung dari mikrofon, dan ini jarak aman di atasnya.
+  micMargin: 0.05,
+  micMinSpan: 0.15,
+  micPeakFloor: 0.2,
+  // lantai derau boleh merangkak naik sepelan ini (detik), supaya dengung yang
+  // memang tetap ikut terserap
+  micFloorTau: 8,
   // serangan cepat supaya ketukan terasa, peredaman lebih lambat supaya mendengung
   attackTau: 0.025,
   releaseTau: 0.18,
@@ -108,7 +126,11 @@ let width = 0;
 let height = 0;
 let lastTime = 0;
 
-let spectrum = new Uint8Array(0);
+// satu penyangga per sumber, karena keduanya dibaca di frame yang sama
+let musicSpectrum = new Uint8Array(0);
+let micSpectrum = new Uint8Array(0);
+// level gabungan per senar sebelum dihaluskan jadi env
+let levels = new Float64Array(0);
 let bandsAssigned = false;
 
 // bentuk simpangan sepanjang senar, dan buffer koordinat gambar. Keduanya dipakai
@@ -153,6 +175,7 @@ function buildStrings() {
   // modus dasar senar yang kedua ujungnya terikat: nol di ujung, puncak di tengah
   shape = new Float64Array(config.segments + 1);
   renderX = new Float64Array(config.segments + 1);
+  levels = new Float64Array(props.count);
   for (let s = 0; s <= config.segments; s++) {
     shape[s] = Math.sin((Math.PI * s) / config.segments);
   }
@@ -175,7 +198,11 @@ function buildStrings() {
       binHi: 1,
       // dimulai dari 1 supaya beberapa detik pertama justru kalem, lalu terbuka
       // sendiri begitu puncak asli tiap band ketahuan
-      peak: 1,
+      musicPeak: 1,
+      micPeak: 1,
+      // ikut turun ke nilai terendah pada frame pertama, jadi kalibrasi ruangan
+      // langsung jadi tanpa perlu jeda
+      micFloor: 1,
       env: 0,
       // fase awal diacak supaya senar tidak melenggok serempak seperti satu pita
       phase: Math.random() * TWO_PI,
@@ -189,14 +216,18 @@ function buildStrings() {
   bandsAssigned = false;
 }
 
-function assignBands() {
-  const node = analyser.value;
-  if (!node || strings.length === 0) return;
+function assignBands(node: AnalyserNode) {
+  if (strings.length === 0) return;
 
   const bins = node.frequencyBinCount;
   const hzPerBin = node.context.sampleRate / 2 / bins;
 
-  if (spectrum.length !== bins) spectrum = new Uint8Array(bins);
+  // kedua analyser dibuat dengan fftSize yang sama di perangkat yang sama, jadi
+  // pembagian pita ini berlaku untuk lagu maupun mikrofon
+  if (musicSpectrum.length !== bins) {
+    musicSpectrum = new Uint8Array(bins);
+    micSpectrum = new Uint8Array(bins);
+  }
 
   const count = strings.length;
   // senar dibagi rata dalam skala logaritma, bukan linear. Musik bergerak per
@@ -221,56 +252,112 @@ function assignBands() {
   bandsAssigned = true;
 }
 
-function updateAudio(dt: number) {
-  const node = analyser.value;
+/**
+ * Energi satu pita frekuensi, 0..1.
+ *
+ * Band treble melebar sampai ratusan bin sementara band bass cuma satu dua.
+ * Rata-rata murni membuat treble tenggelam oleh bin kosong di sekitarnya, jadi
+ * puncak band diberi bobot lebih besar daripada rata-ratanya.
+ */
+function bandEnergy(spec: Uint8Array, string: GuitarString): number {
+  let sum = 0;
+  let max = 0;
 
-  if (!node || !isPlaying.value) {
-    // musik berhenti: getaran mereda sendiri, petikan kursor tetap jalan
+  for (let b = string.binLo; b < string.binHi; b++) {
+    sum += spec[b];
+    if (spec[b] > max) max = spec[b];
+  }
+
+  return (0.65 * max + (0.35 * sum) / (string.binHi - string.binLo)) / 255;
+}
+
+function updateAudio(dt: number) {
+  const musicNode = musicAnalyser.value;
+  const micNode = micAnalyser.value;
+  const musicOn = !!musicNode && isPlaying.value;
+  const micOn = !!micNode && isListening.value;
+
+  if (!musicOn && !micOn) {
+    // tidak ada suara: getaran mereda sendiri, petikan kursor tetap jalan
     const decay = Math.exp(-dt / audioConfig.releaseTau);
     for (const string of strings) string.env *= decay;
     return;
   }
 
-  // analyser baru ada setelah tombol play ditekan pertama kali
-  if (!bandsAssigned) assignBands();
+  // analyser baru ada setelah tombol play atau mikrofon ditekan pertama kali
+  if (!bandsAssigned) assignBands((musicNode ?? micNode)!);
   if (!bandsAssigned) return;
 
-  node.getByteFrequencyData(spectrum);
-
   const peakDecay = Math.exp(-dt / audioConfig.peakTau);
-  const floor = audioConfig.gate + audioConfig.minSpan;
+  levels.fill(0);
+
+  if (musicOn) {
+    musicNode!.getByteFrequencyData(musicSpectrum);
+    const floor = audioConfig.gate + audioConfig.minSpan;
+
+    for (let i = 0; i < strings.length; i++) {
+      const string = strings[i];
+      const raw = bandEnergy(musicSpectrum, string);
+
+      // tiap senar mengukur puncaknya sendiri. Tanpa ini penguatan tiap pita
+      // frekuensi harus disetel satu per satu, dan hasilnya cuma cocok untuk
+      // satu lagu tertentu.
+      string.musicPeak = Math.max(
+        raw,
+        floor + (string.musicPeak - floor) * peakDecay
+      );
+
+      if (raw > audioConfig.gate) {
+        levels[i] = Math.min(
+          1,
+          (raw - audioConfig.gate) / (string.musicPeak - audioConfig.gate)
+        );
+      }
+    }
+  }
+
+  if (micOn) {
+    micNode!.getByteFrequencyData(micSpectrum);
+    const floorRise = 1 - Math.exp(-dt / audioConfig.micFloorTau);
+
+    for (let i = 0; i < strings.length; i++) {
+      const string = strings[i];
+      const raw = bandEnergy(micSpectrum, string);
+
+      string.micPeak = Math.max(
+        raw,
+        audioConfig.micPeakFloor +
+          (string.micPeak - audioConfig.micPeakFloor) * peakDecay
+      );
+
+      // Lantai derau ruangan diukur sendiri: langsung ikut turun ke bagian
+      // tersunyi, tapi naiknya sangat pelan. Dibatasi setengah puncak supaya
+      // suara yang panjang tidak lama-lama ikut dianggap sunyi.
+      string.micFloor =
+        raw < string.micFloor
+          ? raw
+          : Math.min(
+              string.micFloor + (raw - string.micFloor) * floorRise,
+              string.micPeak * 0.5
+            );
+
+      const base = string.micFloor + audioConfig.micMargin;
+      if (raw > base) {
+        const span = Math.max(string.micPeak - base, audioConfig.micMinSpan);
+        // sumber yang paling kencang di pita ini yang menang, jadi lagu dan
+        // suara ruangan bisa jalan berbarengan tanpa saling menumpuk
+        levels[i] = Math.max(levels[i], Math.min(1, (raw - base) / span));
+      }
+    }
+  }
+
   const attackK = 1 - Math.exp(-dt / audioConfig.attackTau);
   const releaseK = 1 - Math.exp(-dt / audioConfig.releaseTau);
 
-  for (const string of strings) {
-    let sum = 0;
-    let max = 0;
-
-    for (let b = string.binLo; b < string.binHi; b++) {
-      sum += spectrum[b];
-      if (spectrum[b] > max) max = spectrum[b];
-    }
-
-    // band treble melebar sampai ratusan bin sementara band bass cuma satu dua.
-    // Rata-rata murni membuat treble tenggelam oleh bin kosong di sekitarnya,
-    // jadi puncak band diberi bobot lebih besar daripada rata-ratanya.
-    const bandWidth = string.binHi - string.binLo;
-    const raw = (0.65 * max + (0.35 * sum) / bandWidth) / 255;
-
-    // tiap senar mengukur puncaknya sendiri. Tanpa ini penguatan tiap pita
-    // frekuensi harus disetel satu per satu, dan hasilnya cuma cocok untuk satu
-    // lagu tertentu.
-    string.peak = Math.max(raw, floor + (string.peak - floor) * peakDecay);
-
-    const level =
-      raw <= audioConfig.gate
-        ? 0
-        : Math.min(
-            1,
-            (raw - audioConfig.gate) / (string.peak - audioConfig.gate)
-          );
-
-    string.env += (level - string.env) * (level > string.env ? attackK : releaseK);
+  for (let i = 0; i < strings.length; i++) {
+    const string = strings[i];
+    string.env +=
+      (levels[i] - string.env) * (levels[i] > string.env ? attackK : releaseK);
   }
 }
 
@@ -418,6 +505,10 @@ onMounted(() => {
   resizeObserver = new ResizeObserver(resize);
   resizeObserver.observe(canvas.value);
   window.addEventListener("pointermove", handlePointerMove, { passive: true });
+
+  // Tidak ditunggu: kalau izinnya ditolak atau perangkatnya tidak ada, senar
+  // tetap jalan seperti biasa — hanya kehilangan satu sumber getaran.
+  startListening();
 });
 
 onUnmounted(() => {
