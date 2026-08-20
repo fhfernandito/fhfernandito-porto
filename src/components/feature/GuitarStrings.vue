@@ -381,21 +381,30 @@ function animate(now: number) {
 
 function handlePointerMove(e: PointerEvent) {
   const rect = canvas.value?.getBoundingClientRect();
-  if (!rect) return;
+  if (!rect || rect.width === 0 || rect.height === 0) return;
 
-  pointer.x = e.clientX - rect.left;
-  pointer.y = e.clientY - rect.top;
+  // rect ikut terskala kalau ada ancestor ber-transform, sedangkan posisi senar
+  // disimpan dalam satuan layout — koordinat kursor dinormalkan dulu supaya
+  // petikan tetap jatuh di senar yang benar
+  pointer.x = ((e.clientX - rect.left) / rect.width) * width;
+  pointer.y = ((e.clientY - rect.top) / rect.height) * height;
 }
 
 function resize() {
   if (!canvas.value || !ctx) return;
 
-  const rect = canvas.value.getBoundingClientRect();
-  if (rect.width === 0 || rect.height === 0) return;
+  // Ukuran diambil dari layout (offsetWidth/Height), bukan getBoundingClientRect.
+  // Rect ikut terskala oleh transform ancestor — LoadingScreen sempat men-scale
+  // #page-content jadi 0.9 — dan ukuran yang keliru itu terpanggang ke backing
+  // store canvas. ResizeObserver tidak menyala saat transform-nya hilang, sebab
+  // border-box-nya tidak berubah, jadi canvas akan salah ukuran selamanya.
+  const cssWidth = canvas.value.offsetWidth;
+  const cssHeight = canvas.value.offsetHeight;
+  if (cssWidth === 0 || cssHeight === 0) return;
 
   const dpr = window.devicePixelRatio || 1;
-  width = rect.width;
-  height = rect.height;
+  width = cssWidth;
+  height = cssHeight;
 
   canvas.value.width = Math.round(width * dpr);
   canvas.value.height = Math.round(height * dpr);

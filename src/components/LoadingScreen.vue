@@ -26,6 +26,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
@@ -39,23 +40,68 @@ const progressContainerRef = ref(null);
 const introOut = ref(false);
 const progressValue = ref(0);
 
-onMounted(() => {
+const router = useRouter();
+
+// #page-content dirender oleh layout di balik <router-view>, dan route-nya dimuat
+// async. Saat LoadingScreen mount elemen itu belum ada di DOM — dan gsap.set
+// dengan selector string yang tidak cocok bukan error, melainkan diam-diam tidak
+// mengenai apa pun. Itulah sebabnya halaman tidak pernah diletakkan di luar layar
+// dan animasi gesernya tidak terlihat sama sekali.
+async function waitForPageContent(maxFrames = 120) {
+  await router.isReady();
+
+  for (let i = 0; i < maxFrames; i++) {
+    const el = document.querySelector('#page-content');
+    if (el) return el;
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+  }
+
+  return null;
+}
+
+onMounted(async () => {
+  const pageContent = await waitForPageContent();
+
+  if (!pageContent) {
+    console.warn('LoadingScreen: #page-content tidak ditemukan, animasi geser halaman dilewati');
+  }
+
+  // Loader ini menutup satu layar penuh, jadi ia wajib tetap menyingkir walau
+  // elemen halaman tidak ketemu
+  const finish = () => {
+    introOut.value = true;
+
+    // Clean up transforms AND positioning to restore scroll
+    if (pageContent) {
+      gsap.set(pageContent, { clearProps: 'all' });
+    }
+
+    // Force layout recalculation and refresh ScrollTrigger
+    ScrollTrigger.refresh();
+
+    // Double check to ensure body overflow is correct
+    document.body.style.overflow = '';
+    document.body.style.height = '';
+  };
+
   // Set initial state for page content
   // Start off-screen right, scaled down
-  gsap.set('#page-content', {
-    x: '100%',
-    scale: 0.9,
-    opacity: 1,
-    borderRadius: '20px',
-    border: '2px solid #f0f4f1',
-    transformOrigin: 'center center',
-    position: 'fixed', // Fix position during animation to prevent scroll issues
-    width: '100%',
-    height: '100vh',
-    overflow: 'hidden',
-    backgroundColor: '#fff', // Ensure background prevents see-through
-    zIndex: 1
-  });
+  if (pageContent) {
+    gsap.set(pageContent, {
+      x: '100%',
+      scale: 0.9,
+      opacity: 1,
+      borderRadius: '20px',
+      border: '2px solid #f0f4f1',
+      transformOrigin: 'center center',
+      position: 'fixed', // Fix position during animation to prevent scroll issues
+      width: '100%',
+      height: '100vh',
+      overflow: 'hidden',
+      backgroundColor: '#fff', // Ensure background prevents see-through
+      zIndex: 1
+    });
+  }
 
   // Animate progress from 0 to 100
   gsap.to(progressValue, {
@@ -107,35 +153,27 @@ onMounted(() => {
         delay: 2.3
       });
 
-      gsap.to('#page-content', {
+      if (!pageContent) {
+        gsap.delayedCall(3.6, finish);
+        return;
+      }
+
+      gsap.to(pageContent, {
         x: '0%',
         duration: 0.8,
         ease: 'power2.inOut',
         delay: 2.3
       });
-      
+
       // Step 6: Scale UP page content after slide finishes
-      gsap.to('#page-content', {
+      gsap.to(pageContent, {
         scale: 1,
         borderRadius: 0,
         border: 'none',
         duration: 0.5,
         ease: 'power2.inOut',
         delay: 3.1, // 2.3 + 0.8
-        onComplete: () => {
-          introOut.value = true;
-          // Clean up transforms AND positioning to restore scroll
-          gsap.set('#page-content', { 
-            clearProps: 'all' 
-          });
-          
-          // Force layout recalculation and refresh ScrollTrigger
-          ScrollTrigger.refresh();
-          
-          // Double check to ensure body overflow is correct
-          document.body.style.overflow = '';
-          document.body.style.height = '';
-        }
+        onComplete: finish
       });
     }
   });

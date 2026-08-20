@@ -4,7 +4,8 @@
     <!-- <OilFluidCursor v-if="mdAndUp" /> -->
     <CircleCursor v-if="mdAndUp" />
     <router-view />
-    <RouteTransition />
+    <!-- <RouteTransition /> -->
+    <LoadingScreen></LoadingScreen>
   </v-app>
 </template>
 
